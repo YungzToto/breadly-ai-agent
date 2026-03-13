@@ -1,0 +1,92 @@
+[
+  {
+    "user_id": "IE001",
+    "name": "Aoife Byrne",
+    "email": "aoife.byrne@example.com",
+    "phone": "+353860001001",
+    "address": {
+      "line1": "14 Pembroke Street",
+      "city": "Dublin 2",
+      "eircode": "D02 XH91",
+      "country": "Ireland"
+    },
+    "gas_identifier": "GPRN-1234567",
+    "current_provider": "Bord Gáis Energy",
+    "meter_type": "standard_credit",
+    "concession_card": false,
+    "annual_kwh": 11500,
+    "annual_spend_eur": 1650
+  },
+  {
+    "user_id": "IE002",
+    "name": "Cian O'Sullivan",
+    "email": "cian.osullivan@example.com",
+    "phone": "+353860002002",
+    "address": {
+      "line1": "22 Patrick Street",
+      "city": "Cork",
+      "eircode": "T12 X4A2",
+      "country": "Ireland"
+    },
+    "gas_identifier": "GPRN-2345678",
+    "current_provider": "Energia",
+    "meter_type": "standard_credit",
+    "concession_card": false,
+    "annual_kwh": 14000,
+    "annual_spend_eur": 1950
+  },
+  {
+    "user_id": "IE003",
+    "name": "Niamh Keane",
+    "email": "niamh.keane@example.com",
+    "phone": "+353860003003",
+    "address": {
+      "line1": "7 Eyre Square",
+      "city": "Galway",
+      "eircode": "H91 A2F9",
+      "country": "Ireland"
+    },
+    "gas_identifier": "GPRN-3456789",
+    "current_provider": "Electric Ireland",
+    "meter_type": "standard_credit",
+    "concession_card": true,
+    "annual_kwh": 10000,
+    "annual_spend_eur": 1550
+  },
+  {
+    "user_id": "IE004",
+    "name": "Darragh Walsh",
+    "email": "darragh.walsh@example.com",
+    "phone": "+353860004004",
+    "address": {
+      "line1": "31 O'Connell Street",
+      "city": "Limerick",
+      "eircode": "V94 F3C2",
+      "country": "Ireland"
+    },
+    "gas_identifier": "GPRN-4567890",
+    "current_provider": "SSE Airtricity",
+    "meter_type": "standard_credit",
+    "concession_card": false,
+    "annual_kwh": 12500,
+    "annual_spend_eur": 1750
+  },
+  {
+    "user_id": "IE005",
+    "name": "Saoirse Nolan",
+    "email": "saoirse.nolan@example.com",
+    "phone": "+353860005005",
+    "address": {
+      "line1": "9 The Quay",
+      "city": "Waterford",
+      "eircode": "X91 YW70",
+      "country": "Ireland"
+    },
+    "gas_identifier": "GPRN-5678901",
+    "current_provider": "Flogas",
+    "meter_type": "standard_credit",
+    "concession_card": false,
+    "annual_kwh": 16000,
+    "annual_spend_eur": 2100
+  }
+]
