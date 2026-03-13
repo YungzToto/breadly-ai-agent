@@ -1,1 +1,7 @@
 project_id = "kldqottrtffkbhbgxgfp"
+
+[functions.gas-compare]
+verify_jwt = false
+
+[functions.gas-switch]
+verify_jwt = false
