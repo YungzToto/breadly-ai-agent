@@ -1,63 +1,65 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Flame, Shield, Zap } from "lucide-react";
+import { ArrowLeft, Flame, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { UserCard } from "@/components/UserCard";
+import { DataCollectionForm } from "@/components/DataCollectionForm";
 import { DealCard } from "@/components/DealCard";
-import { SwitchPanel } from "@/components/SwitchPanel";
+import { PaymentForm } from "@/components/PaymentForm";
+import { SwitchConfirmation } from "@/components/SwitchConfirmation";
+import { SwitchProgress } from "@/components/SwitchPanel";
 import { LoadingState } from "@/components/LoadingState";
 import { compareGasDeals, executeSwitch } from "@/lib/gas-api";
 import type { UserProfile, GasDeal, CompareResult, SwitchResult } from "@/types/gas";
-import sampleUsers from "@/data/sample-users.json";
 
-type Step = "select_user" | "comparing" | "results" | "confirm_switch" | "switching" | "switch_result";
+type Step = "collect_data" | "comparing" | "results" | "payment" | "switching" | "complete";
 
 const Index = () => {
-  const [step, setStep] = useState<Step>("select_user");
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [step, setStep] = useState<Step>("collect_data");
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [compareResult, setCompareResult] = useState<CompareResult | null>(null);
   const [selectedDeal, setSelectedDeal] = useState<GasDeal | null>(null);
   const [switchResult, setSwitchResult] = useState<SwitchResult | null>(null);
 
-  const users = sampleUsers as UserProfile[];
-
-  const handleCompare = async () => {
-    if (!selectedUser) return;
+  const handleUserSubmit = async (userData: UserProfile) => {
+    setUser(userData);
     setStep("comparing");
     try {
-      const result = await compareGasDeals(selectedUser);
+      const result = await compareGasDeals(userData);
       if (result.error) throw new Error(result.error);
       setCompareResult(result);
       setStep("results");
     } catch (e: any) {
       toast.error(e.message || "Failed to compare deals");
-      setStep("select_user");
+      setStep("collect_data");
     }
   };
 
-  const handleSwitchConfirm = () => {
-    if (!selectedDeal) return;
-    setStep("confirm_switch");
+  const handleSelectDeal = (deal: GasDeal) => {
+    setSelectedDeal(deal);
   };
 
-  const handleExecuteSwitch = async () => {
-    if (!selectedUser || !selectedDeal) return;
+  const handleProceedToPayment = () => {
+    if (selectedDeal) setStep("payment");
+  };
+
+  const handleExecuteSwitch = async (iban: string) => {
+    if (!user || !selectedDeal) return;
     setStep("switching");
     try {
-      const result = await executeSwitch(selectedUser, selectedDeal);
+      const result = await executeSwitch(user, selectedDeal, iban);
       if (result.error) throw new Error(result.error);
       setSwitchResult(result);
-      setStep("switch_result");
+      setStep("complete");
     } catch (e: any) {
-      toast.error(e.message || "Failed to execute switch");
-      setStep("results");
+      toast.error(e.message || "Failed to process switch");
+      setStep("payment");
     }
   };
 
   const reset = () => {
-    setStep("select_user");
-    setSelectedUser(null);
+    setStep("collect_data");
+    setUser(null);
     setCompareResult(null);
     setSelectedDeal(null);
     setSwitchResult(null);
@@ -65,7 +67,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -77,7 +78,7 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">Gas Switching Agent</p>
             </div>
           </div>
-          {step !== "select_user" && (
+          {step !== "collect_data" && step !== "complete" && (
             <Button variant="ghost" size="sm" onClick={reset}>
               <ArrowLeft className="w-4 h-4 mr-1" /> Start Over
             </Button>
@@ -87,10 +88,10 @@ const Index = () => {
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
-          {/* Step 1: Select User */}
-          {step === "select_user" && (
+          {/* Step 1: Data Collection */}
+          {step === "collect_data" && (
             <motion.div
-              key="select"
+              key="collect"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -101,48 +102,28 @@ const Index = () => {
                   animate={{ scale: 1 }}
                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"
                 >
-                  <Zap className="w-4 h-4" /> AI-Powered Gas Comparison
+                  <Zap className="w-4 h-4" /> AI-Powered Gas Switching
                 </motion.div>
                 <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-3">
-                  Find the <span className="text-gradient">best gas deal</span> in Ireland
+                  Switch gas & <span className="text-gradient">save money</span> — all in one place
                 </h2>
                 <p className="text-muted-foreground max-w-lg mx-auto">
-                  Select a user profile below. Our AI agent will search live energy comparison sites
-                  and rank the top deals based on their usage.
+                  Tell us about your gas supply. Our AI agent will find the best deals, submit the switch,
+                  and handle everything — you never leave the app.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {users.map((user) => (
-                  <UserCard
-                    key={user.user_id}
-                    user={user}
-                    selected={selectedUser?.user_id === user.user_id}
-                    onSelect={() => setSelectedUser(user)}
-                  />
-                ))}
-              </div>
-
-              <div className="flex justify-center">
-                <Button
-                  onClick={handleCompare}
-                  disabled={!selectedUser}
-                  size="lg"
-                  className="gradient-primary text-primary-foreground px-8 py-6 text-base glow-green"
-                >
-                  Find Best Deals <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </div>
+              <DataCollectionForm onSubmit={handleUserSubmit} />
 
               <div className="flex items-center justify-center gap-6 mt-10 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-primary" /> Live web search
+                  <Shield className="w-3.5 h-3.5 text-primary" /> End-to-end switching
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-primary" /> AI-powered ranking
+                  <Zap className="w-3.5 h-3.5 text-primary" /> AI-powered deals
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-primary" /> 5 top deals
+                  <Flame className="w-3.5 h-3.5 text-primary" /> No external sites
                 </div>
               </div>
             </motion.div>
@@ -179,7 +160,6 @@ const Index = () => {
                 )}
               </div>
 
-              {/* Current provider banner */}
               {compareResult.current_provider_estimate && (
                 <div className="p-4 rounded-xl border border-border bg-secondary/30 mb-6">
                   <div className="flex items-center justify-between">
@@ -206,7 +186,7 @@ const Index = () => {
                     deal={deal}
                     currentSpend={compareResult.user_summary.current_spend}
                     isSelected={selectedDeal?.rank === deal.rank}
-                    onSelect={() => setSelectedDeal(deal)}
+                    onSelect={() => handleSelectDeal(deal)}
                   />
                 ))}
               </div>
@@ -218,74 +198,62 @@ const Index = () => {
                   className="flex justify-center"
                 >
                   <Button
-                    onClick={handleSwitchConfirm}
+                    onClick={handleProceedToPayment}
                     size="lg"
                     className="gradient-primary text-primary-foreground px-8 py-6 text-base glow-green"
                   >
-                    Switch to {selectedDeal.supplier} <ArrowRight className="w-5 h-5 ml-2" />
+                    Switch to {selectedDeal.supplier} — Complete In-App
                   </Button>
                 </motion.div>
               )}
             </motion.div>
           )}
 
-          {/* Step 4: Confirm Switch */}
-          {step === "confirm_switch" && selectedDeal && selectedUser && (
+          {/* Step 4: Payment */}
+          {step === "payment" && selectedDeal && user && (
             <motion.div
-              key="confirm"
+              key="payment"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-lg mx-auto"
             >
-              <div className="p-6 rounded-xl border border-border bg-card text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full gradient-primary flex items-center justify-center">
-                  <Flame className="w-8 h-8 text-primary-foreground" />
-                </div>
-                <h2 className="font-display text-2xl font-bold text-foreground mb-2">Confirm Switch</h2>
-                <p className="text-muted-foreground mb-6">
-                  You're about to switch <strong className="text-foreground">{selectedUser.name}</strong> to{" "}
-                  <strong className="text-primary">{selectedDeal.supplier} — {selectedDeal.plan_name}</strong> at an estimated{" "}
-                  <strong className="text-foreground">€{selectedDeal.estimated_annual_cost.toLocaleString()}/year</strong>.
-                </p>
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1" onClick={() => setStep("results")}>
-                    Go Back
-                  </Button>
-                  <Button
-                    className="flex-1 gradient-primary text-primary-foreground"
-                    onClick={handleExecuteSwitch}
-                  >
-                    Confirm & Switch
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-4">
-                  Our agent will locate the supplier's sign-up page and pre-fill your details.
-                  You'll complete payment on the supplier's site.
-                </p>
-              </div>
+              <PaymentForm
+                deal={selectedDeal}
+                user={user}
+                onSubmit={handleExecuteSwitch}
+                onBack={() => setStep("results")}
+                isSubmitting={false}
+              />
             </motion.div>
           )}
 
-          {/* Step 5 & 6: Switching / Result */}
-          {(step === "switching" || step === "switch_result") && (
+          {/* Step 5: Processing */}
+          {step === "switching" && (
             <motion.div
-              key="switch"
+              key="switching"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <SwitchProgress
+                isProcessing={true}
+                steps={[
+                  { step: 1, name: "Verifying your details", status: "completed", detail: "All information validated" },
+                  { step: 2, name: "Contacting supplier", status: "completed", detail: `Connecting to ${selectedDeal?.supplier}` },
+                  { step: 3, name: "Submitting switch request", status: "needs_user_input", detail: "Processing..." },
+                  { step: 4, name: "Setting up Direct Debit", status: "blocked", detail: "Pending" },
+                ]}
+              />
+            </motion.div>
+          )}
+
+          {/* Step 6: Complete */}
+          {step === "complete" && switchResult && (
+            <motion.div
+              key="complete"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
             >
-              <div className="mb-6">
-                <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-                  Switch Execution
-                </h2>
-                <p className="text-muted-foreground">
-                  {step === "switching"
-                    ? "Our agent is preparing your switch..."
-                    : `Switching to ${selectedDeal?.supplier}`}
-                </p>
-              </div>
-              <SwitchPanel result={switchResult} isLoading={step === "switching"} />
+              <SwitchConfirmation result={switchResult} onStartOver={reset} />
             </motion.div>
           )}
         </AnimatePresence>
