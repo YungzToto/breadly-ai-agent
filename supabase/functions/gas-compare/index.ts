@@ -27,10 +27,14 @@ serve(async (req) => {
     console.log(`Searching gas deals for user: ${user.name} (${user.annual_kwh} kWh/year)`);
 
     // Step 1: Search for ROI gas deals using Firecrawl
+    // Priority 1: Government/regulatory sources
+    // Priority 2: Provider direct sites
+    // Priority 3: Comparison sites (fallback)
     const searchQueries = [
-      `best Republic of Ireland gas deals ${new Date().getFullYear()} cheapest tariff`,
-      `Ireland gas provider comparison unit rate standing charge ${new Date().getFullYear()}`,
-      `CRU Ireland gas tariff rates Bord Gais Energia Electric Ireland SSE Airtricity Flogas`,
+      `site:cru.ie gas tariff rates Ireland ${new Date().getFullYear()}`,
+      `site:seai.ie home energy gas costs Ireland ${new Date().getFullYear()}`,
+      `Bord Gais Energy Energia Electric Ireland SSE Airtricity gas tariff rates unit rate standing charge ${new Date().getFullYear()}`,
+      `best gas deals Ireland ${new Date().getFullYear()} comparison cheapest tariff switcher bonkers`,
     ];
 
     const searchResults: string[] = [];
