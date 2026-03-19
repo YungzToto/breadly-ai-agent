@@ -15,6 +15,9 @@ export interface UserProfile {
   concession_card: boolean;
   annual_kwh: number;
   annual_spend_eur: number;
+  iban?: string;
+  consent_switch?: boolean;
+  consent_data?: boolean;
 }
 
 export interface GasDeal {
@@ -58,12 +61,13 @@ export interface SwitchStep {
 
 export interface SwitchResult {
   success: boolean;
-  status: "ready_for_user" | "blocked";
+  status: "submitted" | "processing" | "completed" | "failed";
   supplier: string;
   plan: string;
-  sign_up_url: string;
+  reference_number: string;
   field_mapping: Record<string, string>;
   steps: SwitchStep[];
   message: string;
+  estimated_switch_date?: string;
   error?: string;
 }
