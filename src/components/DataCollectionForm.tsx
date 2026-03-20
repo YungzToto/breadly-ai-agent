@@ -178,6 +178,17 @@ export function DataCollectionForm({ onSubmit }: DataCollectionFormProps) {
                   </Select>
                 </div>
                 <div>
+                  <Label>Meter Type</Label>
+                  <Select value={form.meter_type} onValueChange={(v) => update("meter_type", v)}>
+                    <SelectTrigger><SelectValue placeholder="Select meter type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard_credit">Standard Credit</SelectItem>
+                      <SelectItem value="prepay">Prepay (PAYG)</SelectItem>
+                      <SelectItem value="budget_controller">Budget Controller</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label htmlFor="kwh">Annual Usage (kWh)</Label>
                   <Input id="kwh" type="number" value={form.annual_kwh} onChange={(e) => update("annual_kwh", e.target.value)} placeholder="11000" />
                   <p className="text-xs text-muted-foreground mt-1">Average Irish home uses ~11,000 kWh/year</p>
