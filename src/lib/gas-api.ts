@@ -13,9 +13,14 @@ export async function compareGasDeals(user: UserProfile): Promise<CompareResult>
   return data as CompareResult;
 }
 
-export async function executeSwitch(user: UserProfile, selectedDeal: GasDeal, iban: string): Promise<SwitchResult> {
+export async function executeSwitch(
+  user: UserProfile,
+  selectedDeal: GasDeal,
+  iban: string,
+  extraFields?: Record<string, string>
+): Promise<SwitchResult> {
   const { data, error } = await supabase.functions.invoke("gas-switch", {
-    body: { user, selectedDeal, iban },
+    body: { user, selectedDeal, iban, extraFields },
   });
 
   if (error) {
