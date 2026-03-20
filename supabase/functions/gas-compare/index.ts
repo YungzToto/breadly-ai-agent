@@ -26,14 +26,18 @@ serve(async (req) => {
 
     console.log(`Searching gas deals for user: ${user.name} (${user.annual_kwh} kWh/year)`);
 
-    // Step 1: Search for ROI gas deals using Firecrawl
-    // Priority 1: Government/regulatory sources
-    // Priority 2: Provider direct sites
-    // Priority 3: Comparison sites (fallback)
+    // Priority-ordered search queries per SRD:
+    // 1. CRU/government/regulator resources
+    // 2. Supplier direct pages (tariff/plan details)
+    // 3. Reputable comparison sites as fallback
     const searchQueries = [
       `site:cru.ie gas tariff rates Ireland ${new Date().getFullYear()}`,
       `site:seai.ie home energy gas costs Ireland ${new Date().getFullYear()}`,
-      `Bord Gais Energy Energia Electric Ireland SSE Airtricity gas tariff rates unit rate standing charge ${new Date().getFullYear()}`,
+      `site:bordgaisenergy.ie gas plans tariff rates ${new Date().getFullYear()}`,
+      `site:energia.ie gas plans tariff rates ${new Date().getFullYear()}`,
+      `site:electricireland.ie gas plans tariff rates ${new Date().getFullYear()}`,
+      `site:sseairtricity.com gas plans tariff Ireland ${new Date().getFullYear()}`,
+      `site:flogas.ie gas plans tariff rates ${new Date().getFullYear()}`,
       `best gas deals Ireland ${new Date().getFullYear()} comparison cheapest tariff switcher bonkers`,
     ];
 
@@ -74,7 +78,7 @@ serve(async (req) => {
 
     console.log(`Collected ${searchResults.length} search results`);
 
-    // Step 2: Use Lovable AI to analyze and rank deals
+    // Use Lovable AI to analyze, filter for eligibility, and rank deals
     const analysisPrompt = `You are an energy comparison expert for the Republic of Ireland gas market.
 
 USER DETAILS:
@@ -87,10 +91,17 @@ USER DETAILS:
 - Current Annual Spend: €${user.annual_spend_eur}
 - Concession Card: ${user.concession_card ? "Yes" : "No"}
 
-SEARCH RESULTS FROM IRISH ENERGY COMPARISON SITES:
+SEARCH RESULTS FROM IRISH ENERGY SOURCES:
 ${searchResults.join("\n\n---\n\n")}
 
-Based on the search results and the user's usage of ${user.annual_kwh} kWh/year, return EXACTLY 5 gas deals ranked from cheapest to most expensive estimated annual cost.
+ELIGIBILITY FILTERING RULES:
+- Filter out plans not available for the user's meter type (${user.meter_type})
+- Filter out plans restricted to locations the user's eircode (${user.address?.eircode}) does not match
+- If the user has a concession card, note any relevant discounts or restrictions
+- Apply any new-customer-only restrictions (user is currently with ${user.current_provider})
+- Apply any supplier-specific eligibility rules discovered in the search results
+
+Based on the search results and the user's usage of ${user.annual_kwh} kWh/year, return EXACTLY 5 eligible gas deals ranked from cheapest to most expensive estimated annual cost.
 
 You MUST respond with a valid JSON object in this exact format (no markdown, no code blocks, just raw JSON):
 {
@@ -106,18 +117,23 @@ You MUST respond with a valid JSON object in this exact format (no markdown, no 
       "exit_fee": 0,
       "inclusions": ["Cashback offer", "etc"],
       "exclusions": ["No smart meter discount"],
-      "source_url": "https://..."
+      "sources": ["https://url1.com", "https://url2.com"]
     }
   ],
   "current_provider_estimate": {
     "supplier": "${user.current_provider}",
+    "plan_name": null,
     "estimated_annual_cost": ${user.annual_spend_eur},
     "notes": "Based on user's reported spend"
   },
-  "search_summary": "Brief summary of the current Irish gas market"
+  "search_summary": "Brief summary of the current Irish gas market and eligibility notes"
 }
 
-If you cannot find exact pricing from the search results, use reasonable estimates based on the Irish gas market and note the estimation. Always include real supplier names from the Irish market (Bord Gáis Energy, Energia, Electric Ireland, SSE Airtricity, Flogas, Panda Power, etc.).`;
+IMPORTANT:
+- Each deal MUST include at least 1 supporting URL in the "sources" array
+- Use real supplier names from the Irish market
+- If exact pricing isn't available, estimate based on the Irish gas market and note it
+- The "sources" array should contain the URLs where you found the pricing data`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
