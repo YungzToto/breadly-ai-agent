@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import type { GasDeal } from "@/types/gas";
-import { TrendingDown, Clock, AlertTriangle, ExternalLink, Check, X } from "lucide-react";
+import { TrendingDown, Clock, AlertTriangle, Check, X, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DealCardProps {
@@ -109,22 +109,37 @@ export function DealCard({ deal, currentSpend, onSelect, isSelected }: DealCardP
         </div>
       )}
 
-      <div className="flex items-center gap-3">
-        <Button
-          onClick={onSelect}
-          variant={isSelected ? "default" : "outline"}
-          className={`flex-1 ${isSelected ? "gradient-primary text-primary-foreground" : ""}`}
-        >
-          {isSelected ? "Selected" : "Switch to this plan"}
-        </Button>
-        {deal.source_url && (
-          <a href={deal.source_url} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="icon">
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-          </a>
-        )}
-      </div>
+      {/* Sources */}
+      {deal.sources && deal.sources.length > 0 && (
+        <div className="mb-4">
+          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+            <Link2 className="w-3 h-3" /> Sources:
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {deal.sources.map((src, i) => {
+              let hostname = src;
+              try { hostname = new URL(src).hostname.replace("www.", ""); } catch {}
+              return (
+                <span
+                  key={i}
+                  className="text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground"
+                  title={src}
+                >
+                  {hostname}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <Button
+        onClick={onSelect}
+        variant={isSelected ? "default" : "outline"}
+        className={`w-full ${isSelected ? "gradient-primary text-primary-foreground" : ""}`}
+      >
+        {isSelected ? "✓ Selected" : "Switch to this plan"}
+      </Button>
     </motion.div>
   );
 }
