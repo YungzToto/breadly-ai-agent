@@ -31,7 +31,7 @@ export interface GasDeal {
   exit_fee: number;
   inclusions: string[];
   exclusions: string[];
-  source_url?: string;
+  sources: string[];
 }
 
 export interface CompareResult {
@@ -39,6 +39,7 @@ export interface CompareResult {
   deals: GasDeal[];
   current_provider_estimate: {
     supplier: string;
+    plan_name: string | null;
     estimated_annual_cost: number;
     notes: string;
   };
@@ -59,15 +60,28 @@ export interface SwitchStep {
   detail: string;
 }
 
+export type SwitchStatus = "success_pre_payment_screen" | "needs_user_input" | "blocked" | "failed";
+
+export interface MissingField {
+  field_name: string;
+  label: string;
+  type: "text" | "date" | "select" | "email" | "tel";
+  required: boolean;
+  options?: string[];
+}
+
 export interface SwitchResult {
   success: boolean;
-  status: "submitted" | "processing" | "completed" | "failed";
+  status: SwitchStatus;
   supplier: string;
   plan: string;
   reference_number: string;
   field_mapping: Record<string, string>;
   steps: SwitchStep[];
   message: string;
+  notes: string;
+  last_page_url?: string;
   estimated_switch_date?: string;
+  missing_fields?: MissingField[];
   error?: string;
 }
