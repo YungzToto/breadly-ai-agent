@@ -1,73 +1,48 @@
-# Welcome to your Lovable project
+AI-Powered Gas Switching Agent
+-> An in-app gas switching tool for Irish consumers. Users compare deals and complete the entire supplier switch without leaving the platform.
 
-## Project info
+Tech Stack:
+-> Frontend: React, TypeScript, Vite, Tailwind CSS
+-> UI Components: shadcn-ui 
+-> Backend: Supabase Edge Functions 
+-> AI Used: Lovable
+-> Web Scraping: Firecrawl API
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+How It Works:
+1. Data Collection (DataCollectionForm.tsx)
+-> The multi-step form collects: name, email, phone, address, Eircode, GPRN, current provider, meter type, annual usage, and consent from the user.
 
-## How can I edit this code?
+2. Deal Comparison (gas-compare edge function):
+-> Scrapes 8 priority-ordered sources via Firecrawl: CRU/SEAI government sites → supplier direct sites (Bord Gáis, Energia, Electric Ireland, SSE Airtricity, Flogas) → comparison sites (Switcher, Bonkers)
+-> Sends all scraped content + user profile to Gemini 2.5 Flash with a structured prompt
+-> AI returns top 5 eligible deals as JSON, filtered by meter type, location, concession card status, and new-customer restrictions
+-> Frontend displays deals in DealCard components with estimated savings vs. current spend
 
-There are several ways of editing your application.
+3. Automated Switch (gas-switch edge function):
+-> Scrapes the selected supplier's sign-up page via Firecrawl
+-> AI analyses the form fields and compares against collected user data
 
-**Use Lovable**
+Returns one of 4 statuses:
+-> needs_user_input — supplier needs extra fields (e.g., date of birth) → renders MissingFieldsForm
+-> success_pre_payment_screen — all non-payment fields filled → renders PaymentForm for IBAN
+blocked / failed — switch cannot proceed
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+4. Payment & Completion:
+-> The user enters their IBAN for Direct Debit. The final call to the gas-switch with the IBAN completes the switch and returns a reference number and estimated switch date.
 
-Changes made via Lovable will be committed automatically to this repo.
+Key Files:
+-> src/pages/Index.tsx:	Main page (collect_data → comparing → results → missing_fields → payment → switching → complete)
+-> src/lib/gas-api.ts: Client-side API wrapper — calls edge functions via Supabase SDK
+-> src/types/gas.ts:	TypeScript interfaces for UserProfile, GasDeal, CompareResult, SwitchResult, MissingField
+-> supabase/functions/gas-compare/	Edge function: scrape + AI deal ranking
+-> supabase/functions/gas-switch/	Edge function: scrape supplier form + AI field analysis + status resolution
 
-**Use your preferred IDE**
+Environment Variables:
+-> FIRECRAWL_API_KEY:	Edge function secret	Web scraping via Firecrawl
+-> LOVABLE_API_KEY:	Auto-provisioned	AI Gateway authentication
+-> VITE_SUPABASE_URL:	.env (auto)	Supabase project URL
+-> VITE_SUPABASE_PUBLISHABLE_KEY:	.env (auto)	Supabase anon key
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+-> How To Run Locally:
+npm install
 npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
